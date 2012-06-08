@@ -1,0 +1,25 @@
+http://vdatum.noaa.gov/dev/gtx_info.html
+
+TSS - Inverse topography of sea surface. Location of NAVD 88 relative to LMSL.
+In the near future, this file will be named as TSSxx where xx is from the corresponded Gxx.
+
+MHHW - Tidal model. Location of MHHW relative to LMSL. Values are always positive.
+
+-2 = x + 0
+  
+
+MHHW (+2) is always positive
+  MHHS is above LMSL
+  LMSL is below MHHW
+    0_MHHW = 2 LMSL
+
+
+
+gdal_merge.py -o ../tss_merged_epsg4326.img -of HFA tss.gtx OR_centr01_8301/tss.gtx ORWAcolr01_8301/tss.gtx
+
+
+gdalwarp -dstnodata "-9999" -t_srs EPSG:2992 -of HFA -r cubic /Users/mewald/Desktop/bigdata-project-small/data/tidal_datums/shift_grids_hfa/fixed_grids/CAORblan01_8301__mllw.img /Users/mewald/Desktop/bigdata-project-small/data/tidal_datums/shift_grids_hfa/fixed_grids/OR_centr01_8301__mllw.img /Users/mewald/Desktop/bigdata-project-small/data/tidal_datums/shift_grids_hfa/fixed_grids/ORWAcolr01_8301__mllw.img data/tidal_datums/mllw_merged_epsg2992.img
+
+gdalwarp -dstnodata "-9999" -t_srs EPSG:2992 -of HFA -r cubic /Users/mewald/Desktop/bigdata-project-small/data/tidal_datums/shift_grids_hfa/fixed_grids/CAORblan01_8301__mhhw.img /Users/mewald/Desktop/bigdata-project-small/data/tidal_datums/shift_grids_hfa/fixed_grids/OR_centr01_8301__mhhw.img /Users/mewald/Desktop/bigdata-project-small/data/tidal_datums/shift_grids_hfa/fixed_grids/ORWAcolr01_8301__mhhw.img data/tidal_datums/mhhw_merged_epsg2992.img
+
+gdalwarp -dstnodata "-9999" -t_srs EPSG:2992 -of HFA -r cubic /Users/mewald/Desktop/bigdata-project-small/data/tidal_datums/shift_grids_hfa/fixed_grids/CAORblan01_8301__tss.img /Users/mewald/Desktop/bigdata-project-small/data/tidal_datums/shift_grids_hfa/fixed_grids/OR_centr01_8301__tss.img /Users/mewald/Desktop/bigdata-project-small/data/tidal_datums/shift_grids_hfa/fixed_grids/ORWAcolr01_8301__tss.img data/tidal_datums/tss_merged_epsg2992.img
