@@ -337,7 +337,11 @@ def binary_raster_to_vector(binary_raster_path, output_vector_path, driver="ESRI
   return output_vector_path
 
 def hmt_tile_binary_processor(tile_path, hmt_value, output_path, driver="HFA", noData=0, blocksize=(600,600)):
-  """ Open the tile, get info about it, create a binary raster marking areas below HMT as a value of 1"""
+  """
+  Open the tile, get info about it, create a binary raster marking areas below HMT as a value of 1
+  
+  hmt_value is a HMT threshold applied to every cell in the raster.
+  """
 
   # Open the LIDAR tile as read-only and get the driver GDAL is using to access the data
   lidar_tile_fh = gdal.Open(tile_path, gdal.GA_ReadOnly)
@@ -427,7 +431,12 @@ def hmt_tile_binary_processor(tile_path, hmt_value, output_path, driver="HFA", n
   return output_path
 
 def hmt_tile_binary_processor_griddedHMT(tile_path, hmt_incriment_tile_path, output_path, driver="HFA", noData=0, blocksize=(600,600)):
-  """ Open the tile, get info about it, create a binary raster marking areas below HMT as a value of 1"""
+  """
+  Open the tile, get info about it, create a binary raster marking areas below HMT as a value of 1
+  
+  This variant of the processor uses a HMT grid of the same dimension, extent, and cell position as the source elevation data.
+  Doing so allows this processor to respect site-specific HMT thresholds (i.e., each cell has a unique HMT).
+  """
 
   # Open the LIDAR tile as read-only, get the driver GDAL is using to access the data,
   # and pull Metadata associated with the LIDAR tile so we can create the output raster later.
