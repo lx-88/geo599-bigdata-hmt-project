@@ -247,9 +247,9 @@ def convert_navd88_to_tidal(lidar_path, tss_path, tidal_conversion_path, lidar_i
       # TSS = "Location of NAVD88 relative to LMSL"
       # Tidal Conversion = Location of Tidal Datum relative to LMSL
       # 
-      # Therefore, ELEV_tidal = ELEV_navd + TSS conversion - Tidal conversion
+      # Therefore, ELEV_tidal = ELEV_navd - TSS conversion - Tidal conversion
       # 
-      lidar_in_tidal = lidar_np+tss_conversion_np-tidal_conversion_np
+      lidar_in_tidal = lidar_np-tss_conversion_np-tidal_conversion_np
       
       # Write the array to the raster
       lidar_in_tidal_band.WriteArray(lidar_in_tidal, j, i)
