@@ -7,7 +7,7 @@ Objective
 Map Highest Measured Tide in Oregon using LiDAR data (class project)
 
 Basically this processing chain takes the VDatum grids, a highest measured tide incriment
-above MHHW, and NAVD88 LiDAR data as input then does some magic (resampling and math) and spits out a
+above MHHW (as a grid or single value), and NAVD88 LiDAR data as input then does some magic (resampling, math, raster to vector conversions) and spits out a
 vector dataset representing areas that fall under estimate of Highest Measured Tide.
 
 This project is by no means opperational or reliable. It was produced for a class project
