@@ -35,3 +35,8 @@ TODO
 References
 ---------------------------- 
 *   NOAA Tides and Currents - http://tidesandcurrents.noaa.gov/
+*   NOAA Tidal Datums - http://tidesandcurrents.noaa.gov/datum_options.html
+*   Oregon DSL "Using Tidal Data for HMT" - http://www.oregon.gov/dsl/PERMITS/docs/using_tidal_data_for_hmt.doc
+*   "Heads of Tide for Coastal Streams in Oregon" (OR DSL 1989) - http://www.oregon.gov/dsl/PERMITS/docs/heads_of_tide_1989.pdf?ga=t
+*   NOAA VDatum - http://vdatum.noaa.gov/
+*   Oregon Coast LiDAR Data - http://www.oregongeology.org/sub/projects/olc/
