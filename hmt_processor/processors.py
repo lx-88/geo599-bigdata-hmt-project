@@ -568,3 +568,110 @@ def hmt_tile_binary_processor(tile_path, hmt_value, output_path, driver="HFA", n
   # We're done!
   #logger.info("  Done.")
   return output_path
+
+def hmt_tile_binary_processor_griddedHMT(tile_path, hmt_incriment_tile_path, output_path, driver="HFA", noData=0, blocksize=(600,600)):
+  """ Open the tile, get info about it, create a binary raster marking areas below HMT as a value of 1"""
+
+  # Open the LIDAR tile as read-only, get the driver GDAL is using to access the data,
+  # and pull Metadata associated with the LIDAR tile so we can create the output raster later.
+  lidar_tile_fh = gdal.Open(tile_path, gdal.GA_ReadOnly)
+  input_driver = lidar_tile_fh.GetDriver()
+  tile_geotransform = lidar_tile_fh.GetGeoTransform()
+  tile_projection = lidar_tile_fh.GetProjection()
+  cols = lidar_tile_fh.RasterXSize  # Get the number of columns
+  rows = lidar_tile_fh.RasterYSize  # Get the number of rows
+  logger.info("  cols: {0}".format(cols))
+  logger.info("  rows: {0}".format(rows))
+  tile_lidar = lidar_tile_fh.GetRasterBand(1)  # Get the raster band
+  tile_nodata = tile_lidar.GetNoDataValue()  # Get the NoData value so we can set our mask
+  
+  # Open the LIDAR tile as read-only, get the driver GDAL is using to access the data,
+  # and pull Metadata associated with the LIDAR tile so we can create the output raster later.
+  hmt_tile_fh = gdal.Open(hmt_incriment_tile_path, gdal.GA_ReadOnly)
+  hmt_driver = hmt_tile_fh.GetDriver()
+  tile_hmt_geotransform = hmt_tile_fh.GetGeoTransform()
+  tile_hmt_projection = hmt_tile_fh.GetProjection()
+  hmt_cols = hmt_tile_fh.RasterXSize  # Get the number of columns
+  hmt_rows = hmt_tile_fh.RasterYSize  # Get the number of rows
+  logger.info("  cols: {0}".format(cols))
+  logger.info("  rows: {0}".format(rows))
+  tile_hmt = hmt_tile_fh.GetRasterBand(1)  # Get the raster band
+  tile_hmt_nodata = tile_hmt.GetNoDataValue()  # Get the NoData value so we can set our mask
+  
+  # Get block size from parameters
+  xBlockSize = blocksize[0]
+  yBlockSize = blocksize[1]
+
+  num_block_cols = cols/xBlockSize  
+  num_block_rows = rows/yBlockSize
+  
+  logger.info("  col blocks: {0}".format(num_block_cols))
+  logger.info("  row blocks: {0}".format(num_block_rows))
+  
+  # Create a copy of the data using in the input tile as an example.
+  logger.info("  Creating new raster...")
+  output_driver = gdal.GetDriverByName(driver)  # Setup the output driver
+  HMT_output_fh = output_driver.Create(output_path, cols, rows, 1, gdal.GDT_Float32)
+  HMT_output_fh.SetGeoTransform(tile_geotransform)
+  HMT_output_fh.SetProjection(tile_projection)
+  HMT_output_band = HMT_output_fh.GetRasterBand(1)
+  HMT_output_band.SetNoDataValue(noData)
+  logger.info("    done.")
+  
+  logger.info("  Processing data...")
+  
+  #  Building Jobs
+  job_n = 0
+  for i in range(0, rows, yBlockSize):  # Loop through row blocks
+    if i + yBlockSize < rows: numRows = yBlockSize
+    else: numRows = rows - i
+    for j in range(0, cols, xBlockSize):  # Loop through col blocks
+      if j + xBlockSize < cols: numCols = xBlockSize
+      else: numCols = cols - j
+      # Build job here
+      logger.info("    Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
+      
+      lidar_np = tile_lidar.ReadAsArray(j, i, numCols, numRows)
+      hmt_np = tile_hmt.ReadAsArray(j, i, numCols, numRows)
+      
+      lidar_hmt_masked_below_hmt = np.ma.masked_equal(lidar_np, tile_nodata, copy=False).filled(np.nan) <= hmt_np  # Create the mask
+      
+      # Write the array to the raster
+      HMT_output_band.WriteArray(lidar_hmt_masked_below_hmt, j, i)
+      
+      # Clean Up
+      HMT_output_fh.FlushCache()
+      lidar_hmt_masked_below_hmt = None
+      lidar_np = None
+      hmt_np = None
+  # Done looping through blocks
+  
+  logger.info("   done.")
+  
+  # Compute Statistics before closing out the dataset
+  logger.info("  Computing stats...")
+  try:
+    HMT_output_band.ComputeStatistics(False)
+  except RuntimeError:
+    logger.warn("    Cannot compute statistics. This probably means that there were no pixels that met the HMT definition and are therefore null values.")
+  logger.info("    done.")
+  
+  logger.info("  Building blocks...")
+  HMT_output_fh.BuildOverviews(overviewlist=[2,4,8,16,32,64,128])
+  logger.info("    done.")
+  
+  logger.info("  Flushing the cache...")
+  lidar_tile_fh.FlushCache()
+  logger.info("    done.")
+  
+  # Clean up the dataset file handlers
+  logger.info("  Closing the dataset...")
+  HMT_output_band = None
+  lidar_tile_fh = None
+  hmt_tile_fh = None
+  HMT_output_fh = None
+  logger.info("    done.")
+  
+  # We're done!
+  #logger.info("  Done.")
+  return output_path
