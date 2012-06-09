@@ -370,7 +370,7 @@ def hmt_tile_binary_processor(tile_path, hmt_value, output_path, driver="HFA", n
   # Create a copy of the data using in the input tile as an example.
   logger.info("  Creating new raster...")
   output_driver = gdal.GetDriverByName(driver)  # Setup the output driver
-  HMT_output_fh = output_driver.Create(output_path, cols, rows, 1, gdal.GDT_Float32)
+  HMT_output_fh = output_driver.Create(output_path, cols, rows, 1, gdal.GDT_Byte)
   HMT_output_fh.SetGeoTransform(tile_geotransform)
   HMT_output_fh.SetProjection(tile_projection)
   HMT_output_band = HMT_output_fh.GetRasterBand(1)
@@ -393,7 +393,7 @@ def hmt_tile_binary_processor(tile_path, hmt_value, output_path, driver="HFA", n
       lidar_hmt_masked_below_hmt = np.ma.masked_equal(lidar_np, tile_nodata, copy=False).filled(np.nan) <= hmt_value  # Create the mask
       
       # Write the array to the raster
-      HMT_output_band.WriteArray(lidar_hmt_masked_below_hmt, j, i)
+      HMT_output_band.WriteArray(lidar_hmt_masked_below_hmt.astype(np.int), j, i)
       
       # Clean Up
       HMT_output_fh.FlushCache()
