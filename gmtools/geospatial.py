@@ -55,6 +55,7 @@ def Pixel2WorldCoords(gdal_geotransform, pixel_x, pixel_y):
     # Get data from geotransform
     #   gdal_geotransform
     #     origin_x, e-w resolution, rotation, origin_y, rotation, n-s resoluton (usually negative)
+    #
     origin_x = gdal_geotransform[0]
     ew_resoltion = gdal_geotransform[1]
     origin_y = gdal_geotransform[3]

@@ -33,6 +33,10 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+fhnd = logging.FileHandler('logs/hmt_processor.log')
+fhnd.setLevel(logging.DEBUG)
+fhnd.setFormatter(formatter)
+logger.addHandler(fhnd)
 
 # Import Parallel Python
 import pp
@@ -76,8 +80,6 @@ TIDALINCRIMENT_DIR = os.path.join(PROJECT_DIR, 'data', 'hmt_incriment')
 # File folders that break up LIDAR tiles
 SITE_BLOCKS = ['Neh_LIDAR', 'SSNERR_LIDAR', 'Till_LIDAR']
 
-def test_job(quad):
-  return quad
 
 def tile_job(raw_quad_path, hmt_value, processed_quad_path):
   pass
