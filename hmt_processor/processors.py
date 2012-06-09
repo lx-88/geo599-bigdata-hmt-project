@@ -219,7 +219,7 @@ def convert_navd88_to_tidal(lidar_path, tss_path, tidal_conversion_path, lidar_i
       if j + xBlockSize < cols: numCols = xBlockSize
       else: numCols = cols - j
       # Build job here
-      logger.info("      Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
+      #logger.info("      Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
       
       # Read data
       lidar_np = lidar_band.ReadAsArray(j, i, numCols, numRows)
@@ -388,7 +388,7 @@ def hmt_tile_binary_processor(tile_path, hmt_value, output_path, driver="HFA", n
       if j + xBlockSize < cols: numCols = xBlockSize
       else: numCols = cols - j
       # Build job here
-      logger.info("    Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
+      #logger.info("    Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
       lidar_np = tile_lidar.ReadAsArray(j, i, numCols, numRows)
       lidar_hmt_masked_below_hmt = np.ma.masked_equal(lidar_np, tile_nodata, copy=False).filled(np.nan) <= hmt_value  # Create the mask
       
@@ -495,7 +495,7 @@ def hmt_tile_binary_processor_griddedHMT(tile_path, hmt_incriment_tile_path, out
       if j + xBlockSize < cols: numCols = xBlockSize
       else: numCols = cols - j
       # Build job here
-      logger.info("    Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
+      #logger.info("    Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
       
       lidar_np = tile_lidar.ReadAsArray(j, i, numCols, numRows)
       hmt_np = tile_hmt.ReadAsArray(j, i, numCols, numRows)
