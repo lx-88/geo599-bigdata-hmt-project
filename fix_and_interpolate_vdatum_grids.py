@@ -96,6 +96,8 @@ def fix_nodata(input_path, output_path, desired_nodata=-9999, driver="HFA", bloc
   grid_datatype = grid_data.DataType
   grid_original_nodata = grid_data.GetNoDataValue()  # Get the NoData value so we can set our mask
   logger.info("  original nodata value: {0}".format(grid_original_nodata))
+  logger.info("  desired nodata value: {0}".format(desired_nodata))
+  
   if grid_original_nodata is None:
     logger.warn("  Using a nodata value of -88.88 because the src file didn't define a nodata value.")
     grid_original_nodata = float(-88.8)
@@ -132,7 +134,7 @@ def fix_nodata(input_path, output_path, desired_nodata=-9999, driver="HFA", bloc
       if j + xBlockSize < cols: numCols = xBlockSize
       else: numCols = cols - j
       # Build job here
-      logger.info("    Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
+      #logger.info("    Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
       grid_np = grid_data.ReadAsArray(j, i, numCols, numRows)
       grid_np_masked = np.ma.masked_less_equal(grid_np, grid_original_nodata, copy=False).filled(np.NaN)  # Create the mask
       
@@ -169,7 +171,7 @@ def fix_nodata(input_path, output_path, desired_nodata=-9999, driver="HFA", bloc
   
   return output_path
 
-def create_nodata_mask(mhhw_path, output_path, desired_nodata=1, driver="HFA", blocksize=(600,600)):
+def create_nodata_mask(mhhw_path, output_path, desired_nodata=99, driver="HFA", blocksize=(600,600)):
   """
   This function takes the data from the merged dataset created using ArcGIS
   and restablishes the nodata field in GDAL.
@@ -193,7 +195,8 @@ def create_nodata_mask(mhhw_path, output_path, desired_nodata=1, driver="HFA", b
   mhhw_original_nodata = mhhw_data.GetNoDataValue()  # Get the NoData value so we can set our mask
   
   logger.info("  original nodata value: {0}".format(mhhw_original_nodata))
-  
+  logger.info("  desired nodata value: {0}".format(desired_nodata))
+
   # Get block size from parameters
   xBlockSize = blocksize[0]
   yBlockSize = blocksize[1]
@@ -207,7 +210,7 @@ def create_nodata_mask(mhhw_path, output_path, desired_nodata=1, driver="HFA", b
   # Create a copy of the data using in the input tile as an example.
   logger.info("  Creating new raster...")
   output_driver = gdal.GetDriverByName(driver)  # Setup the output driver
-  output_fh = output_driver.Create(output_path, cols, rows, 1, gdal.GDT_Byte)
+  output_fh = output_driver.Create(output_path, cols, rows, 1, gdal.GDT_Int32)
   output_fh.SetGeoTransform(geotransform)
   output_fh.SetProjection(projection)
   output_band = output_fh.GetRasterBand(1)
@@ -221,21 +224,21 @@ def create_nodata_mask(mhhw_path, output_path, desired_nodata=1, driver="HFA", b
   for i in range(0, rows, yBlockSize):  # Loop through row blocks
     if i + yBlockSize < rows: numRows = yBlockSize
     else: numRows = rows - i
+    
     for j in range(0, cols, xBlockSize):  # Loop through col blocks
       if j + xBlockSize < cols: numCols = xBlockSize
       else: numCols = cols - j
       # Build job here
-      logger.info("    Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
+      #logger.info("    Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
       mhhw_np = mhhw_data.ReadAsArray(j, i, numCols, numRows)
-      mhhw_np_masked = np.ma.masked_equal(mhhw_np, mhhw_original_nodata, copy=False).filled(0)  # Create the mask
-      mhhw_np_masked = np.ma.masked_not_equal(mhhw_np_masked, 0, copy=False).filled(1)  # Create the mask
+      mhhw_wp_interp_mask = np.greater(mhhw_np, mhhw_original_nodata)  # This marks each cell as 0/1. 0 means we want to interpolate.
       
       # Write the array to the raster
-      output_band.WriteArray(mhhw_np_masked, j, i)
+      output_band.WriteArray(mhhw_wp_interp_mask, j, i)
       
       # Clean Up
       output_fh.FlushCache()
-      mhhw_np_masked = None
+      mhhw_wp_interp_mask = None
       mhhw_np = None
   # Done looping through blocks
   
@@ -300,7 +303,7 @@ def fill_nodata(input_path, mask_path, output_path, max_distance=0, smoothing_it
   output_fh.SetGeoTransform(geotransform)
   output_fh.SetProjection(projection)
   output_band = output_fh.GetRasterBand(1)
-  output_band.SetNoDataValue(desired_nodata)
+  output_band.SetNoDataValue(9)
   logger.info("    done.")
   
   logger.info("  copying band to destination file...")
@@ -397,14 +400,14 @@ if __name__ == '__main__':
     output_path = os.path.join(VDATUM_GRIDS_DIR, filename_split[0]+"_mask"+filename_split[1])  # output path for grid
     create_nodata_mask(input_path, output_path)  # Do the work
   
-  for grid_name in ('mhhw_merged_epsg2992.img', 'mllw_merged_epsg2992.img', 'tss_merged_epsg2992.img'):
-    filename_split = os.path.splitext(grid_name)  # split the extension from grid_name
-    grid_path = os.path.join(VDATUM_GRIDS_DIR, grid_name)  # path to the input grid
-    mask_path = os.path.join(VDATUM_GRIDS_DIR, filename_split[0]+"_mask"+filename_split[1])
-    output_path = os.path.join(VDATUM_GRIDS_DIR, filename_split[0]+"_filled_invdist"+filename_split[1])
-    
-    # Equivelent to gdal_fillnodata.py -md 0 mhhw_merged_v2.img -mask mhhw_merged_v2_mask.img mhhw_merged_v2_mask_filled_v2.img
-    # max_distance= 0 means that the script is allowed to search the entire raster for values
-    # takes about 45 min to run on Linux box.
-    fillnodata_result = fill_nodata(grid_path, mask_path, output_path, max_distance=0)
-    print fillnodata_result
+  #for grid_name in ('mhhw_merged_epsg2992.img', 'mllw_merged_epsg2992.img', 'tss_merged_epsg2992.img'):
+  #  filename_split = os.path.splitext(grid_name)  # split the extension from grid_name
+  #  grid_path = os.path.join(VDATUM_GRIDS_DIR, grid_name)  # path to the input grid
+  #  mask_path = os.path.join(VDATUM_GRIDS_DIR, filename_split[0]+"_mask"+filename_split[1])
+  #  output_path = os.path.join(VDATUM_GRIDS_DIR, filename_split[0]+"_filled_invdist"+filename_split[1])
+  # 
+  #  # Equivelent to gdal_fillnodata.py -md 0 mhhw_merged_v2.img -mask mhhw_merged_v2_mask.img mhhw_merged_v2_mask_filled_v2.img
+  #  # max_distance= 0 means that the script is allowed to search the entire raster for values
+  #  # takes about 45 min to run on Linux box.
+  #  fillnodata_result = fill_nodata(grid_path, mask_path, output_path, max_distance=0)
+  #  print fillnodata_result

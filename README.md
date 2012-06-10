@@ -31,6 +31,8 @@ TODO
 *   some way to represent the results of a sensativity analysis / confidence intervals as part of the mapped HMT vector output
 *   confirm the assumption that invdist interpolation of VDatum nodata regions is approriate
 *   find a better way to model tidal variability along the Oregon Coast given the lack of NAVD88-referenced tidal stations
+*   build a GUI / web interface to query, monitor progress, and export restults (similar to OpenTopography)
+
 
 References
 ---------------------------- 
