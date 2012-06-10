@@ -109,6 +109,21 @@ def reproject_dataset_to_quad(src_dataset_path, template_dataset_path, destinati
   logger.info("      reshaping data raster to match template raster...")
   res = gdal.ReprojectImage( src_dataset, outut_mhhw_dataset, src_srs.ExportToWkt(), target_srs.ExportToWkt(), respample_method, maxmem )
   logger.info("        done.")
+  
+  logger.info("  Computing stats...")
+  try:
+    outut_mhhw_dataset.GetRasterBand(1).ComputeStatistics(False)
+  except RuntimeError:
+    logger.warn("    Cannot compute statistics.")
+  logger.info("    done.")
+  
+  logger.info("  Building blocks...")
+  outut_mhhw_dataset.BuildOverviews(overviewlist=[2,4,8,16,32,64,128])
+  logger.info("    done.")
+  
+  logger.info("  Flushing the cache...")
+  outut_mhhw_dataset.FlushCache()
+  logger.info("    done.")
     
   # Clean up
   logger.info("      cleaning up / closing datasets...")
