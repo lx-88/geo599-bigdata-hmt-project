@@ -91,8 +91,8 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
   
   # Limit the number of tiles to two if we don't want to do the full run
   if small is True:
-    lidar_quads = lidar_quads[0:2]
-    logger.warn("Restricting lidar quads to first two items in list")
+    lidar_quads = lidar_quads[0:1]
+    logger.warn("Restricting lidar quads to the first item in list")
   
   # Lists to holds filepaths
   lidar_paths_full = list()
@@ -161,11 +161,11 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
     processed_mllw_quad_path = os.path.join(LIDAR_DIR, data_block, 'processed', "{0}_mllw_conversion.img".format(quad))  # Output file
     # Work
     logger.info("  Reshaping TSS Quad")
-    tss_tile = hmt.reproject_dataset_to_quad(tss_path, raw_quad_path, processed_tss_quad_path, band=1, respample_method=gdal.GRA_Bilinear, maxmem=500, output_driver="HFA")  # Do the work
+    processed_tss_quad_path = hmt.reproject_dataset_to_quad(tss_path, raw_quad_path, processed_tss_quad_path, band=1, respample_method=gdal.GRA_Bilinear, maxmem=500, output_driver="HFA")  # Do the work
     #tss_tile = processed_tss_quad_path
     logger.info("    done.")
     logger.info("  Reshaping MHHW Quad")
-    mhhw_tile = hmt.reproject_dataset_to_quad(mhhw_path, raw_quad_path, processed_mhhw_quad_path, band=1, respample_method=gdal.GRA_Bilinear, maxmem=500, output_driver="HFA")  # Do the work
+    processed_mhhw_quad_path = hmt.reproject_dataset_to_quad(mhhw_path, raw_quad_path, processed_mhhw_quad_path, band=1, respample_method=gdal.GRA_Bilinear, maxmem=500, output_driver="HFA")  # Do the work
     #mhhw_tile = processed_mhhw_quad_path
     logger.info("    done.")
     #logger.info("  Reshaping MLLW Quad")
@@ -178,7 +178,7 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
     ##
     logger.info("  ################### Converting NAVD88 to MHHW datum using mhhw_tile ###################")
     lidar_in_mhhw_path = os.path.join(LIDAR_DIR, data_block, 'processed', "{0}_lidar_in_mhhw.img".format(quad))  # Output file
-    lidar_in_mhhw_path = hmt.convert_navd88_to_tidal(raw_quad_path, tss_tile, mhhw_tile, lidar_in_mhhw_path)
+    lidar_in_mhhw_path = hmt.convert_navd88_to_tidal(raw_quad_path, processed_tss_quad_path, processed_mhhw_quad_path, lidar_in_mhhw_path)
     logger.info(" done.")
     logger.info("  ####### done.")
     
@@ -255,8 +255,8 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
 
 if __name__ == '__main__':
   # Each quad takes about 30 minutes (2012-06-05) on the old MacBook Pro (2.6 GHz Intel Core 2 Duo, 4gb 667 MHz DDR2 RAM)
-  #data_processor("SSNERR", 'SSNERR_LIDAR', ['be42124d3', 'be43124b2', 'be43124c1', 'be43124c2', 'be43124c3', 'be43124d1', 'be43124d2'], small=False)
-  #data_processor("Nehalem", 'Neh_LIDAR', ['be45123f7', 'be45123f8', 'be45123g7b'], small=False)
-  #data_processor("Tillamook", 'Till_LIDAR', ['be45123e8', 'be45123e7', 'be45123d8', 'be45123d7', 'be45123d6'], small=False)
+  #data_processor("SSNERR", 'SSNERR_LIDAR', ['be42124d3', 'be43124b2', 'be43124c1', 'be43124c2', 'be43124c3', 'be43124d1', 'be43124d2'], small=True)
+  data_processor("Nehalem", 'Neh_LIDAR', ['be45123f8', 'be45123f7', 'be45123g7b'], small=True)
+  #data_processor("Tillamook", 'Till_LIDAR', ['be45123e8', 'be45123e7', 'be45123d8', 'be45123d7', 'be45123d6'], small=True)
   #logging.warn("Enable one of the processors above.")
   pass
