@@ -255,8 +255,8 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
 
 if __name__ == '__main__':
   # Each quad takes about 30 minutes (2012-06-05) on the old MacBook Pro (2.6 GHz Intel Core 2 Duo, 4gb 667 MHz DDR2 RAM)
-  #data_processor("SSNERR", 'SSNERR_LIDAR', ['be42124d3', 'be43124b2', 'be43124c1', 'be43124c2', 'be43124c3', 'be43124d1', 'be43124d2'], small=True)
-  data_processor("Nehalem", 'Neh_LIDAR', ['be45123f8', 'be45123f7', 'be45123g7b'], small=True)
-  #data_processor("Tillamook", 'Till_LIDAR', ['be45123e8', 'be45123e7', 'be45123d8', 'be45123d7', 'be45123d6'], small=True)
+  data_processor("SSNERR", 'SSNERR_LIDAR', ['be42124d3', 'be43124b2', 'be43124c1', 'be43124c2', 'be43124c3', 'be43124d1', 'be43124d2'], small=False)
+  data_processor("Nehalem", 'Neh_LIDAR', ['be45123f8', 'be45123f7', 'be45123g7b'], small=False)
+  data_processor("Tillamook", 'Till_LIDAR', ['be45123e8', 'be45123e7', 'be45123d8', 'be45123d7', 'be45123d6'], small=False)
   #logging.warn("Enable one of the processors above.")
   pass

@@ -312,6 +312,32 @@ def fill_nodata(input_path, mask_path, output_path, max_distance=0, smoothing_it
   result = gdal.FillNodata(output_band, mask_band, max_distance, smoothing_iterations, options, callback = prog_func)
   logger.info("    done.")
   
+  # Compute Statistics before closing out the dataset
+  logger.info("  Computing stats...")
+  try:
+    output_band.ComputeStatistics(False)
+  except RuntimeError:
+    logger.warn("    Cannot compute statistics.")
+  logger.info("    done.")
+  
+  logger.info("    cleanning up band...")
+  output_band = None
+  logger.info("    done.")
+
+  logger.info("  Building blocks...")
+  output_fh.BuildOverviews(overviewlist=[2,4,8,16,32,64,128])
+  logger.info("    done.")
+  
+  logger.info("  Flushing the cache...")
+  output_fh.FlushCache()
+  logger.info("    done.")
+  
+  logger.info("  closing mask bands and all file handlers...")
+  output_fh = None
+  mask_band = None
+  input_fh = None
+  logger.info("      done.")
+  
   return result
 
 if __name__ == '__main__':
