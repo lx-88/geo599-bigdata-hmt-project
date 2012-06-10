@@ -515,7 +515,8 @@ def hmt_tile_binary_processor_griddedHMT(tile_path, hmt_incriment_tile_path, out
       lidar_np = tile_lidar.ReadAsArray(j, i, numCols, numRows)
       hmt_np = tile_hmt.ReadAsArray(j, i, numCols, numRows)
       
-      lidar_hmt_masked_below_hmt = np.ma.masked_equal(lidar_np, tile_nodata, copy=False).filled(np.nan) <= hmt_np  # Create the mask
+      lidar_hmt_masked_below_hmt = np.ma.masked_equal(lidar_np, tile_nodata, copy=True).filled(np.nan)  # Create the mask
+      lidar_hmt_masked_below_hmt <= hmt_np
       
       # Write the array to the raster
       HMT_output_band.WriteArray(lidar_hmt_masked_below_hmt, j, i)
