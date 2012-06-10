@@ -1,9 +1,7 @@
 geo599-bigdata-hmt-project
 ==========================
 
-Objective
-----------------------------
-
+### Objective
 Map Highest Measured Tide in Oregon using LiDAR data (class project)
 
 Basically this processing chain takes the VDatum grids, a highest measured tide incriment
@@ -14,18 +12,16 @@ This project is by no means opperational or reliable. It was produced for a clas
 and may be incorporated into future work. You may be able to adapt some of the code to your project
 if it relies on OGR / GDAL's python bindings.
 
-Everything is released under the MIT License but I ask that you credit me if you use it.
+Everything is released under the [MIT License](http://www.opensource.org/licenses/mit-license.php) but I ask that you credit me if you use it.
 
 
-Dependencies
-----------------------------
+### Dependencies
 *   GDAL / OGR (http://www.gdal.org/, and their python bindings)
 *   Shapely (https://github.com/sgillies/shapely) (not implimented yet)
 *   Parallel Python (http://www.parallelpython.com/) (if you want to run multiple LiDAR datasets at once)
 
 
-TODO
----------------------------- 
+### TODO
 *   merge vector output together and dissolve
 *   fully impliment parallel processing within the chain
 *   some way to represent the results of a sensativity analysis / confidence intervals as part of the mapped HMT vector output
@@ -34,8 +30,7 @@ TODO
 *   build a GUI / web interface to query, monitor progress, and export restults (similar to OpenTopography)
 
 
-References
----------------------------- 
+### References
 *   NOAA Tides and Currents - http://tidesandcurrents.noaa.gov/
 *   NOAA Tidal Datums - http://tidesandcurrents.noaa.gov/datum_options.html
 *   Oregon DSL "Using Tidal Data for HMT" - http://www.oregon.gov/dsl/PERMITS/docs/using_tidal_data_for_hmt.doc
