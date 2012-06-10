@@ -36,6 +36,11 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+fhnd = logging.FileHandler('logs/fix_and_interpolate_vdatum_grids.log')
+fhnd.setLevel(logging.DEBUG)
+fhnd.setFormatter(formatter)
+logger.addHandler(fhnd)
+
 
 # Import Numpy
 import numpy as np
@@ -47,7 +52,7 @@ from osgeo import osr
 
 # Import Geomatics Research helpers
 from gmtools import filesystem as gm_fs
-from gmtools import gdal as gm_gdal
+from gmtools import geospatial as gm_gdal
 
 # Import HMT specific packages
 from hmt_processor import processors as hmt
