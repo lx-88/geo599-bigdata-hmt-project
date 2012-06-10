@@ -203,12 +203,12 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
     logger.info("  ################### Processing binary raster based on MHHW incriment ###################")
     binary_raster_path_mhhw = os.path.join(LIDAR_DIR, data_block, 'processed', "{0}_HMT_binary_via_MHHW.img".format(quad))                     # Output file
     binary_raster_path_mhhw = hmt.hmt_tile_binary_processor_griddedHMT(lidar_in_mhhw_path, hmt_incriment_mhhw_path, binary_raster_path_mhhw)   # Create binary raster
-    output_vector_path_mhhw = os.path.join(LIDAR_DIR, data_block, 'shp', "{0}_belowHMT_viaMHHW.shp".format(quad))                              # Vector filepath
-    if os.path.exists(output_vector_path_mhhw): ogr.GetDriverByName("ESRI Shapefile").DeleteDataSource(output_vector_path_mhhw)                # Delete if exists
-    output_vector_path_mhhw = hmt.binary_raster_to_vector(binary_raster_path_mhhw, output_vector_path_mhhw, driver="ESRI Shapefile")           # Create shapefile from binary raster
-    logger.info("  Deleting binary raster...")
-    gdal.GetDriverByName("HFA").Delete(binary_raster_path_mhhw)  # Delete the binary raster
-    logger.info("  done.")
+    #output_vector_path_mhhw = os.path.join(LIDAR_DIR, data_block, 'shp', "{0}_belowHMT_viaMHHW.shp".format(quad))                              # Vector filepath
+    #if os.path.exists(output_vector_path_mhhw): ogr.GetDriverByName("ESRI Shapefile").DeleteDataSource(output_vector_path_mhhw)                # Delete if exists
+    #output_vector_path_mhhw = hmt.binary_raster_to_vector(binary_raster_path_mhhw, output_vector_path_mhhw, driver="ESRI Shapefile")           # Create shapefile from binary raster
+    #logger.info("  Deleting binary raster...")
+    #gdal.GetDriverByName("HFA").Delete(binary_raster_path_mhhw)  # Delete the binary raster
+    #logger.info("  done.")
     logger.info("  ####### done.")
     
     ##
