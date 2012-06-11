@@ -180,6 +180,12 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
     lidar_in_mhhw_path = os.path.join(LIDAR_DIR, data_block, 'processed', "{0}_lidar_in_mhhw.img".format(quad))  # Output file
     lidar_in_mhhw_path = hmt.convert_navd88_to_tidal(raw_quad_path, processed_tss_quad_path, processed_mhhw_quad_path, lidar_in_mhhw_path)
     logger.info(" done.")
+    logger.info("  Deleting TSS conversion quad raster...")
+    gdal.GetDriverByName("HFA").Delete(processed_tss_quad_path)  # Delete the raster
+    logger.info("  done.")
+    logger.info("  Deleting MHHW conversion quad raster...")
+    gdal.GetDriverByName("HFA").Delete(processed_mhhw_quad_path)  # Delete the raster
+    logger.info("  done.")
     logger.info("  ####### done.")
     
     logger.info("  ################### Reshaping HMT (in MHHW datum) to match LIDAR quad ###################")
@@ -215,6 +221,9 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
     logger.info("  Deleting binary raster...")
     gdal.GetDriverByName("HFA").Delete(binary_raster_path_mhhw)  # Delete the binary raster
     logger.info("  done.")
+    logger.info("  Deleting HMT incriment raster...")
+    gdal.GetDriverByName("HFA").Delete(hmt_incriment_mhhw_path_quad)  # Delete the raster
+    logger.info("  done.")
     logger.info("  ####### done.")
     
     ##
@@ -243,6 +252,9 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
     output_vector_path_navd = hmt.binary_raster_to_vector(binary_raster_path_navd, output_vector_path_navd, driver="ESRI Shapefile")  # Create shapefile from binary raster
     logger.info("  Deleting binary raster...")
     gdal.GetDriverByName("HFA").Delete(binary_raster_path_navd)  # Delete the binary raster
+    logger.info("  done.")
+    logger.info("  Deleting HMT incriment raster...")
+    gdal.GetDriverByName("HFA").Delete(hmt_incriment_navd88_path_quad)  # Delete the raster
     logger.info("  done.")
     logger.info("  ####### done.")
     
