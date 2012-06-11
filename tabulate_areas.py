@@ -74,30 +74,40 @@ SITE_BLOCKS = ['Neh_LIDAR', 'SSNERR_LIDAR', 'Till_LIDAR']
 def dissolve_polygons():
   pass
 
-def data_area_tabulator(name, output_csv_path, data_block, quads, simplify_tollerance=2, small=False):
+def data_area_tabulator(name, output_csv_path, data_block, quads, simplify_tollerance=5, small=False):
   """
   
   """
   logger.info("Welcome to the {0} area tabulator!".format(name))
+  logger.warn("  simplify tollerance is set to {0}".format(simplify_tollerance))
   
   # CSV setup
-  #output_csv = csv.writer(open(output_csv_path, 'w'))  # Setup the CSV writer
-  #output_csv.writerow(['block_name', 'quad', 'area_under_HMT_sqft'])  # Write Column Headings
+  output_csv = csv.writer(open(os.path.join(PROJECT_DIR, 'output', output_csv_path), 'w'))  # Setup the CSV writer
+  output_csv.writerow(['block_name', 'quad', 'datum', 'area_under_HMT_sqft'])  # Write Column Headings
   
   shp_driver = ogr.GetDriverByName("ESRI Shapefile")
-  output_filepath = os.path.join(PROJECT_DIR, 'output', "{0}_merged_areas.shp".format(name))
-  if os.path.exists(output_filepath): shp_driver.DeleteDataSource(output_filepath)
-  ds = shp_driver.CreateDataSource( output_filepath )
+  
+  output_filepath_mhhw = os.path.join(PROJECT_DIR, 'output', "{0}_merged_areas_viaMHHW.shp".format(name))
+  if os.path.exists(output_filepath_mhhw): shp_driver.DeleteDataSource(output_filepath_mhhw)
+  ds_mhhw = shp_driver.CreateDataSource( output_filepath_mhhw )
+  
+  output_filepath_navd88 = os.path.join(PROJECT_DIR, 'output', "{0}_merged_areas_viaNAVD88.shp".format(name))
+  if os.path.exists(output_filepath_navd88): shp_driver.DeleteDataSource(output_filepath_navd88)
+  ds_navd88 = shp_driver.CreateDataSource( output_filepath_navd88 )
+  
   spatialReference = osr.SpatialReference()
   spatialReference.ImportFromEPSG(2992)
-    
-  layer = ds.CreateLayer(os.path.splitext(output_filepath)[0], spatialReference, ogr.wkbMultiPolygon)
+  
+  layer_mhhw = ds_mhhw.CreateLayer(os.path.splitext(output_filepath_mhhw)[0], spatialReference, ogr.wkbMultiPolygon)
+  layer_navd88 = ds_navd88.CreateLayer(os.path.splitext(output_filepath_navd88)[0], spatialReference, ogr.wkbMultiPolygon)
   
   field_defn = ogr.FieldDefn( "belowHMT", ogr.OFTString )
   field_defn.SetWidth( 5 )
-  layer.CreateField ( field_defn )
+  layer_mhhw.CreateField ( field_defn )
+  layer_navd88.CreateField ( field_defn )
   
-  geom_to_merge = ogr.Geometry(type=ogr.wkbGeometryCollection)
+  geom_to_merge_mhhw = ogr.Geometry(type=ogr.wkbGeometryCollection)
+  geom_to_merge_navd88 = ogr.Geometry(type=ogr.wkbGeometryCollection)
   
   # Loop through each quad
   for quad in quads:
@@ -106,56 +116,89 @@ def data_area_tabulator(name, output_csv_path, data_block, quads, simplify_tolle
     
     # HMT via vertical datums
     quad_shp_path_viaMHHW = os.path.join(quad_shp_folder_path, "{0}_belowHMT_viaMHHW.shp".format(quad))
-    quad_shp_path_viaNAVD88 = os.path.join(quad_shp_folder_path, "{0}_belowHMT_viaMHHW.shp".format(quad))
+    quad_shp_path_viaNAVD88 = os.path.join(quad_shp_folder_path, "{0}_belowHMT_viaNAVD88.shp".format(quad))
     
     # Make sure that the shapefile exists. If it doesn't throw a warning and move to the next quad
     if os.path.exists(quad_shp_path_viaMHHW) is False:
       logger.error("The HMT shapefile (via MHHW) for quad {0} doesn't exist! Skipping!".format(quad))
       continue
     
+    # Make sure that the shapefile exists. If it doesn't throw a warning and move to the next quad
+    if os.path.exists(quad_shp_path_viaNAVD88) is False:
+      logger.error("The HMT shapefile (via NAVD88) for quad {0} doesn't exist! Skipping!".format(quad))
+      continue
+    
     # Open the shapefile using OGR
-    quad_vect_fp = ogr.Open(quad_shp_path_viaMHHW)
-    if quad_vect_fp is None:
+    quad_vect_fp_mhhw = ogr.Open(quad_shp_path_viaMHHW)
+    if quad_vect_fp_mhhw is None:
       logger.error("Could not open shapefile: {0}".format(quad_shp_path_viaMHHW))
       continue
     
-    quad_vect_driver = quad_vect_fp.GetDriver()
-    quad_vect_layer = quad_vect_fp.GetLayer()
+    # Open the shapefile using OGR
+    quad_vect_fp_navd88 = ogr.Open(quad_shp_path_viaNAVD88)
+    if quad_vect_fp_navd88 is None:
+      logger.error("Could not open shapefile: {0}".format(quad_shp_path_viaNAVD88))
+      continue
     
-    running_area_total = 0
-    feat_defn = quad_vect_layer.GetLayerDefn()
+    quad_vect_driver_mhhw = quad_vect_fp_mhhw.GetDriver()
+    quad_vect_layer_mhhw = quad_vect_fp_mhhw.GetLayer()
+    feat_defn_mhhw = quad_vect_layer_mhhw.GetLayerDefn()
     
-    # Loop through each feature in the layer
-    for feature in quad_vect_layer:
+    quad_vect_driver_navd88 = quad_vect_fp_navd88.GetDriver()
+    quad_vect_layer_navd88 = quad_vect_fp_navd88.GetLayer()
+    feat_defn_navd88 = quad_vect_layer_navd88.GetLayerDefn()
+    
+    logger.info("  Looping through MHHW features...")
+    # Loop through each feature in the layer in the MHHW layer
+    for feature in quad_vect_layer_mhhw:
       geom = feature.GetGeometryRef().Simplify(simplify_tollerance)
-      geom_area = geom.GetArea()
-      geom_to_merge.AddGeometry(geom)
-      running_area_total += geom_area
+      geom_to_merge_mhhw.AddGeometry(geom)
+    logger.info("    done.")
     
-    #logger.info("  dissolving after quad: {0}".format(quad))
-    #geom_to_merge = geom_to_merge.Buffer(0)
-    logger.info("  total square feet of HMT area in {0}: {1}".format(quad, running_area_total))
-    
+    logger.info("  Looping through NAVD88 features...")
+    # Loop through each feature in the layer in the NAVD88 layer
+    for feature in quad_vect_layer_navd88:
+      geom = feature.GetGeometryRef().Simplify(simplify_tollerance)
+      geom_to_merge_navd88.AddGeometry(geom)
+    logger.info("    done.")
+      
   # This dissolves the overlapping regions of polygon components
-  logger.info("  Dissolving...")
-  gb = geom_to_merge.Buffer(0)
-  #gb = geom_to_merge
+  logger.info("  Dissolving MHHW features...")
+  gb_mhhw = geom_to_merge_mhhw.Buffer(0)
   logger.info("    done.")
   
-  logger.info("  Creating feature...")
-  layerDefinition = layer.GetLayerDefn()
+  # This dissolves the overlapping regions of polygon components
+  logger.info("  Dissolving NAVD88 features...")
+  gb_navd88 = geom_to_merge_navd88.Buffer(0)
+  logger.info("    done.")
   
-  feature = ogr.Feature(layerDefinition)
-  feature.SetField( "belowHMT", "Yes" )
-  feature.SetGeometry(gb)
-  layer.CreateFeature(feature)
-  feature.Destroy()
+  logger.info("  Creating NA feature...")
+  layerDefinition_mhhw = layer_mhhw.GetLayerDefn()
+  layerDefinition_navd88 = layer_navd88.GetLayerDefn()
+  
+  feature_mhhw = ogr.Feature(layerDefinition_mhhw)
+  feature_mhhw.SetField( "belowHMT", "Yes" )
+  feature_mhhw.SetGeometry(gb_mhhw)
+  layer_mhhw.CreateFeature(feature_mhhw)
+  feature_mhhw.Destroy()
+  
+  feature_navd88 = ogr.Feature(layerDefinition_navd88)
+  feature_navd88.SetField( "belowHMT", "Yes" )
+  feature_navd88.SetGeometry(gb_navd88)
+  layer_navd88.CreateFeature(feature_navd88)
+  feature_navd88.Destroy()
+  
   logger.info("  done.")
-  logger.info('  closing dataset.')
-  #layer.Destroy()  # Close out
-  logger.info("    done.")
   
-  print gb.GetArea()
+  # Get area of dissolved shapefile
+  new_area_mhhw = gb_mhhw.GetArea()
+  
+  # Get area of dissolved shapefile
+  new_area_navd88 = gb_navd88.GetArea()
+  
+  # Write output to CSV
+  output_csv.writerow([name, 'MHHW', new_area_mhhw])  # Write Column Headings
+  output_csv.writerow([name, 'NAVD88', new_area_navd88])  # Write Column Headings
   
   return output_csv_path
 
