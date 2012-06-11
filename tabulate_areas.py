@@ -74,15 +74,30 @@ SITE_BLOCKS = ['Neh_LIDAR', 'SSNERR_LIDAR', 'Till_LIDAR']
 def dissolve_polygons():
   pass
 
-def data_area_tabulator(name, output_csv_path, data_block, quads, small=False):
+def data_area_tabulator(name, output_csv_path, data_block, quads, simplify_tollerance=2, small=False):
   """
   
   """
   logger.info("Welcome to the {0} area tabulator!".format(name))
   
   # CSV setup
-  output_csv = csv.writer(open(output_csv_path, 'w'))  # Setup the CSV writer
-  output_csv.writerow(['block_name', 'quad', 'area_under_HMT_sqft'])  # Write Column Headings
+  #output_csv = csv.writer(open(output_csv_path, 'w'))  # Setup the CSV writer
+  #output_csv.writerow(['block_name', 'quad', 'area_under_HMT_sqft'])  # Write Column Headings
+  
+  shp_driver = ogr.GetDriverByName("ESRI Shapefile")
+  output_filepath = os.path.join(PROJECT_DIR, 'output', "{0}_merged_areas.shp".format(name))
+  if os.path.exists(output_filepath): shp_driver.DeleteDataSource(output_filepath)
+  ds = shp_driver.CreateDataSource( output_filepath )
+  spatialReference = osr.SpatialReference()
+  spatialReference.ImportFromEPSG(2992)
+    
+  layer = ds.CreateLayer(os.path.splitext(output_filepath)[0], spatialReference, ogr.wkbMultiPolygon)
+  
+  field_defn = ogr.FieldDefn( "belowHMT", ogr.OFTString )
+  field_defn.SetWidth( 5 )
+  layer.CreateField ( field_defn )
+  
+  geom_to_merge = ogr.Geometry(type=ogr.wkbGeometryCollection)
   
   # Loop through each quad
   for quad in quads:
@@ -112,13 +127,35 @@ def data_area_tabulator(name, output_csv_path, data_block, quads, small=False):
     
     # Loop through each feature in the layer
     for feature in quad_vect_layer:
-      geom = feature.GetGeometryRef()
+      geom = feature.GetGeometryRef().Simplify(simplify_tollerance)
       geom_area = geom.GetArea()
+      geom_to_merge.AddGeometry(geom)
       running_area_total += geom_area
-      
-    logger.info("Total square feet of HMT area in quad: {0}".format(running_area_total))
     
-    print quad_shp_path_viaMHHW
+    #logger.info("  dissolving after quad: {0}".format(quad))
+    #geom_to_merge = geom_to_merge.Buffer(0)
+    logger.info("  total square feet of HMT area in {0}: {1}".format(quad, running_area_total))
+    
+  # This dissolves the overlapping regions of polygon components
+  logger.info("  Dissolving...")
+  gb = geom_to_merge.Buffer(0)
+  #gb = geom_to_merge
+  logger.info("    done.")
+  
+  logger.info("  Creating feature...")
+  layerDefinition = layer.GetLayerDefn()
+  
+  feature = ogr.Feature(layerDefinition)
+  feature.SetField( "belowHMT", "Yes" )
+  feature.SetGeometry(gb)
+  layer.CreateFeature(feature)
+  feature.Destroy()
+  logger.info("  done.")
+  logger.info('  closing dataset.')
+  #layer.Destroy()  # Close out
+  logger.info("    done.")
+  
+  print gb.GetArea()
   
   return output_csv_path
 
@@ -128,8 +165,8 @@ if __name__ == '__main__':
   """
   
   # Each quad takes about 30 minutes (2012-06-05) on the old MacBook Pro (2.6 GHz Intel Core 2 Duo, 4gb 667 MHz DDR2 RAM)
-  data_area_tabulator("SSNERR", "SSNERR_areas.csv", 'SSNERR_LIDAR', ['be42124d3', 'be43124b2', 'be43124c1', 'be43124c2', 'be43124c3', 'be43124d1', 'be43124d2'], small=False)
+  #data_area_tabulator("SSNERR", "SSNERR_areas.csv", 'SSNERR_LIDAR', ['be42124d3', 'be43124b2', 'be43124c1', 'be43124c2', 'be43124c3', 'be43124d1', 'be43124d2'], small=False)
   data_area_tabulator("Nehalem", "Nehalem_areas.csv", 'Neh_LIDAR', ['be45123f8', 'be45123f7', 'be45123g7b'], small=False)
-  data_area_tabulator("Tillamook", "Tillamook_areas.csv", 'Till_LIDAR', ['be45123e8', 'be45123e7', 'be45123d8', 'be45123d7', 'be45123d6'], small=False)
+  #data_area_tabulator("Tillamook", "Tillamook_areas.csv", 'Till_LIDAR', ['be45123e8', 'be45123e7', 'be45123d8', 'be45123d7', 'be45123d6'], small=False)
   #logging.warn("Enable one of the processors above.")
   pass

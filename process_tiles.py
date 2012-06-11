@@ -183,9 +183,15 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
     logger.info("  ####### done.")
     
     logger.info("  ################### Reshaping HMT (in MHHW datum) to match LIDAR quad ###################")
-    hmt_incriment_mhhw_path = os.path.join(TIDALINCRIMENT_DIR, 'dlcd_hmt_mhhw_nearest.img')
+    hmt_incriment_mhhw_path = os.path.join(TIDALINCRIMENT_DIR, 'dlcd_hmt_mhhw_invdist.img')
     hmt_incriment_mhhw_path_quad = os.path.join(LIDAR_DIR, data_block, 'processed', "{0}_hmt_incriment_mhhw.img".format(quad))  # Output file
     hmt_incriment_mhhw_path_quad = hmt.reproject_dataset_to_quad(hmt_incriment_mhhw_path, raw_quad_path, hmt_incriment_mhhw_path_quad, band=1, respample_method=gdal.GRA_Bilinear, maxmem=500, output_driver="HFA")  # Do the work
+    logger.info("  ####### done.")
+    
+    logger.info("  ################### Reshaping HMT (in NAVD88 datum) to match LIDAR quad ###################")
+    hmt_incriment_navd88_path = os.path.join(TIDALINCRIMENT_DIR, 'dlcd_hmt_mhhw_nearest.img')
+    hmt_incriment_navd88_path_quad = os.path.join(LIDAR_DIR, data_block, 'processed', "{0}_hmt_incriment_navd88.img".format(quad))  # Output file
+    hmt_incriment_navd88_path_quad = hmt.reproject_dataset_to_quad(hmt_incriment_navd88_path, raw_quad_path, hmt_incriment_navd88_path_quad, band=1, respample_method=gdal.GRA_Bilinear, maxmem=500, output_driver="HFA")  # Do the work
     logger.info("  ####### done.")
     
     ##
@@ -229,16 +235,16 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
     ##
     # Process raster to binary below HMT / above HMT raster via NAVD88 incriment
     ##
-    #logger.info("  ################### Processing binary raster based on NAVD88 ###################")
-    #binary_raster_path_navd = os.path.join(LIDAR_DIR, data_block, 'processed', "{0}_HMT_binary_via_NAVD88.img".format(quad))          # Output file
-    #binary_raster_path_navd = hmt.hmt_tile_binary_processor(raw_quad_path, 11.23, binary_raster_path_navd)                              # Create binary raster
-    #output_vector_path_navd = os.path.join(LIDAR_DIR, data_block, 'shp', "{0}_belowHMT_viaNAVD88.shp".format(quad))                   # Vector filepath
-    #if os.path.exists(output_vector_path_navd): ogr.GetDriverByName("ESRI Shapefile").DeleteDataSource(output_vector_path_navd)       # Delete if exists
-    #output_vector_path_navd = hmt.binary_raster_to_vector(binary_raster_path_navd, output_vector_path_navd, driver="ESRI Shapefile")  # Create shapefile from binary raster
-    #logger.info("  Deleting binary raster...")
-    #gdal.GetDriverByName("HFA").Delete(binary_raster_path_navd)  # Delete the binary raster
-    #logger.info("  done.")
-    #logger.info("  ####### done.")
+    logger.info("  ################### Processing binary raster based on NAVD88 ###################")
+    binary_raster_path_navd = os.path.join(LIDAR_DIR, data_block, 'processed', "{0}_HMT_binary_via_NAVD88.img".format(quad))          # Output file
+    binary_raster_path_navd = hmt.hmt_tile_binary_processor_griddedHMT(raw_quad_path, hmt_incriment_navd88_path_quad, binary_raster_path_navd)                              # Create binary raster
+    output_vector_path_navd = os.path.join(LIDAR_DIR, data_block, 'shp', "{0}_belowHMT_viaNAVD88.shp".format(quad))                   # Vector filepath
+    if os.path.exists(output_vector_path_navd): ogr.GetDriverByName("ESRI Shapefile").DeleteDataSource(output_vector_path_navd)       # Delete if exists
+    output_vector_path_navd = hmt.binary_raster_to_vector(binary_raster_path_navd, output_vector_path_navd, driver="ESRI Shapefile")  # Create shapefile from binary raster
+    logger.info("  Deleting binary raster...")
+    gdal.GetDriverByName("HFA").Delete(binary_raster_path_navd)  # Delete the binary raster
+    logger.info("  done.")
+    logger.info("  ####### done.")
     
     # Clean up and exit
     #output_quads.append(binary_raster_path)
