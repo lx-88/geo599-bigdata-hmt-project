@@ -253,8 +253,8 @@ def convert_navd88_to_tidal(lidar_path, tss_path, tidal_conversion_path, lidar_i
       #
       # Tidal conversion unit = meters
       # tidal_conversion_surveyft = tss_conversion*3.280833333
-      tss_conversion_np*3.280833333
-      tidal_conversion_np*3.280833333
+      tss_conversion_np_ft = tss_conversion_np*3.280833333
+      tidal_conversion_np_ft = tidal_conversion_np*3.280833333
       
       ##
       # Convert NAVD88 to TSS to Tidal Datum
@@ -262,9 +262,9 @@ def convert_navd88_to_tidal(lidar_path, tss_path, tidal_conversion_path, lidar_i
       # TSS = "Location of NAVD88 relative to LMSL"
       # Tidal Conversion = Location of Tidal Datum relative to LMSL
       # 
-      # Therefore, ELEV_tidal = ELEV_navd - TSS conversion - Tidal conversion
+      # Therefore, ELEV_tidal = ELEV_navd + TSS conversion - Tidal conversion
       # 
-      lidar_in_tidal = lidar_np-tss_conversion_np-tidal_conversion_np
+      lidar_in_tidal = lidar_np+tss_conversion_np_ft-tidal_conversion_np_ft
       
       # Write the array to the raster
       lidar_in_tidal_band.WriteArray(lidar_in_tidal, j, i)
@@ -492,7 +492,7 @@ def hmt_tile_binary_processor_griddedHMT(tile_path, hmt_incriment_tile_path, out
   # Create a copy of the data using in the input tile as an example.
   logger.info("  Creating new raster...")
   output_driver = gdal.GetDriverByName(driver)  # Setup the output driver
-  HMT_output_fh = output_driver.Create(output_path, cols, rows, 1, gdal.GDT_Float32)
+  HMT_output_fh = output_driver.Create(output_path, cols, rows, 1, gdal.GDT_Byte)
   HMT_output_fh.SetGeoTransform(tile_geotransform)
   HMT_output_fh.SetProjection(tile_projection)
   HMT_output_band = HMT_output_fh.GetRasterBand(1)
@@ -512,8 +512,8 @@ def hmt_tile_binary_processor_griddedHMT(tile_path, hmt_incriment_tile_path, out
       # Build job here
       #logger.info("    Working on block offset ({0},{1}); cols {2}; rows: {3}...".format(j,i, numCols, numRows))
       
-      lidar_np = tile_lidar.ReadAsArray(j, i, numCols, numRows).astype(np.float)
-      hmt_np = tile_hmt.ReadAsArray(j, i, numCols, numRows).astype(np.float)
+      lidar_np = tile_lidar.ReadAsArray(j, i, numCols, numRows)
+      hmt_np = tile_hmt.ReadAsArray(j, i, numCols, numRows)
       
       lidar_hmt_masked_below_hmt = np.ma.masked_equal(lidar_np, tile_nodata, copy=True).filled(np.nan)  # Create the mask
       binary_rast = lidar_hmt_masked_below_hmt <= hmt_np

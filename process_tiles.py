@@ -202,13 +202,13 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
     ##
     logger.info("  ################### Processing binary raster based on MHHW incriment ###################")
     binary_raster_path_mhhw = os.path.join(LIDAR_DIR, data_block, 'processed', "{0}_HMT_binary_via_MHHW.img".format(quad))                     # Output file
-    binary_raster_path_mhhw = hmt.hmt_tile_binary_processor_griddedHMT(lidar_in_mhhw_path, hmt_incriment_mhhw_path, binary_raster_path_mhhw)   # Create binary raster
-    #output_vector_path_mhhw = os.path.join(LIDAR_DIR, data_block, 'shp', "{0}_belowHMT_viaMHHW.shp".format(quad))                              # Vector filepath
-    #if os.path.exists(output_vector_path_mhhw): ogr.GetDriverByName("ESRI Shapefile").DeleteDataSource(output_vector_path_mhhw)                # Delete if exists
-    #output_vector_path_mhhw = hmt.binary_raster_to_vector(binary_raster_path_mhhw, output_vector_path_mhhw, driver="ESRI Shapefile")           # Create shapefile from binary raster
-    #logger.info("  Deleting binary raster...")
-    #gdal.GetDriverByName("HFA").Delete(binary_raster_path_mhhw)  # Delete the binary raster
-    #logger.info("  done.")
+    binary_raster_path_mhhw = hmt.hmt_tile_binary_processor_griddedHMT(lidar_in_mhhw_path, hmt_incriment_mhhw_path_quad, binary_raster_path_mhhw)   # Create binary raster
+    output_vector_path_mhhw = os.path.join(LIDAR_DIR, data_block, 'shp', "{0}_belowHMT_viaMHHW.shp".format(quad))                              # Vector filepath
+    if os.path.exists(output_vector_path_mhhw): ogr.GetDriverByName("ESRI Shapefile").DeleteDataSource(output_vector_path_mhhw)                # Delete if exists
+    output_vector_path_mhhw = hmt.binary_raster_to_vector(binary_raster_path_mhhw, output_vector_path_mhhw, driver="ESRI Shapefile")           # Create shapefile from binary raster
+    logger.info("  Deleting binary raster...")
+    gdal.GetDriverByName("HFA").Delete(binary_raster_path_mhhw)  # Delete the binary raster
+    logger.info("  done.")
     logger.info("  ####### done.")
     
     ##
@@ -255,8 +255,8 @@ def data_processor(name, data_block, lidar_quads, small=False, parallel=False):
 
 if __name__ == '__main__':
   # Each quad takes about 30 minutes (2012-06-05) on the old MacBook Pro (2.6 GHz Intel Core 2 Duo, 4gb 667 MHz DDR2 RAM)
-  #data_processor("SSNERR", 'SSNERR_LIDAR', ['be42124d3', 'be43124b2', 'be43124c1', 'be43124c2', 'be43124c3', 'be43124d1', 'be43124d2'], small=False)
-  data_processor("Nehalem", 'Neh_LIDAR', ['be45123f8', 'be45123f7', 'be45123g7b'], small=True)
-  #data_processor("Tillamook", 'Till_LIDAR', ['be45123e8', 'be45123e7', 'be45123d8', 'be45123d7', 'be45123d6'], small=False)
+  data_processor("SSNERR", 'SSNERR_LIDAR', ['be42124d3', 'be43124b2', 'be43124c1', 'be43124c2', 'be43124c3', 'be43124d1', 'be43124d2'], small=False)
+  data_processor("Nehalem", 'Neh_LIDAR', ['be45123f8', 'be45123f7', 'be45123g7b'], small=False)
+  data_processor("Tillamook", 'Till_LIDAR', ['be45123e8', 'be45123e7', 'be45123d8', 'be45123d7', 'be45123d6'], small=False)
   #logging.warn("Enable one of the processors above.")
   pass
